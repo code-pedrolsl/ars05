@@ -1,26 +1,21 @@
 [![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/7EVNAYx2)
-# ClientServerBasics (2.0)
-Starter code for the basic client-server assignment
 
+# ClientServerBasics - Multithread
 
-Este template corresponde ao exemplo da Fig. 2.3 do livro. O exercício consiste em acrescentar funcionalidade ao servidor para torná-lo mais útil. Essa funcionalidade deve ser acessível aos clientes. Por exemplo, o servidor pode ser uma espécie de calculadora remota. O cliente passa dois valores numéricos, juntamente com o nome de uma operação (ex.: add, subtract, multiply, divide) e o servidor executa a operação respectiva e retorna seu resultado para o cliente. Você pode implementar um servidor com outras funcionalidades (diferente da calculadora). O imporante é que ele ofereça pelo menos três operações diferentes que os clientes podem utilizar remotamente, passando dados para serem processados e recebendo o resultado desse processamento como resposta.
+Extensão do sistema cliente-servidor com suporte a multithreading no cliente e no servidor, geração automática de requisições e experimentos de desempenho comparativo.
 
-Tarefa individual.
-
-Incluir um Readme descritivo do sistema implementado.
-
--------------------------------------------------------
-# Sistema Cliente-Servidor com Processamento de Strings
+---
 
 ## Arquitetura
 
-A comunicação ocorre via protocolo TCP
+A comunicação ocorre via protocolo TCP. A aplicação é composta pelos seguintes arquivos:
 
-A aplicação é composta por três elementos principais:
-
-* **Servidor (`server.py`)**: responsável por aceitar conexões, interpretar comandos e processar requisições.
-* **Cliente (`client.py`)**: envia comandos ao servidor e exibe as respostas.
-* **Configuração (`constCS.py`)**: define o endereço IP e a porta de comunicação.
+- **`server.py`**: servidor single-thread, mantém uma conexão persistente e processa requisições sequencialmente.
+- **`server_multithread.py`**: servidor multithread, dispara uma nova thread para cada conexão recebida.
+- **`client.py`**: cliente interativo original, permite entrada manual de comandos.
+- **`client_singlethread_auto.py`**: cliente single-thread com geração automática de requisições, usa conexão persistente.
+- **`client_multithread.py`**: cliente multithread, dispara uma nova thread por requisição, cada uma com sua própria conexão TCP.
+- **`constCS.py`**: define o endereço IP e a porta de comunicação.
 
 ---
 
@@ -30,32 +25,26 @@ O cliente envia mensagens de texto contendo um comando seguido de um argumento. 
 
 Formato geral da mensagem:
 
-```id="r6z2qg"
+```
 COMANDO texto
 ```
+
+As mensagens são delimitadas por `\n` para garantir a correta separação no buffer TCP.
 
 ---
 
 ## Operações Disponíveis
 
-O servidor oferece diferentes funcionalidades de manipulação de strings:
-
-* **UPPER**: converte todo o texto para letras maiúsculas
-* **LOWER**: converte todo o texto para letras minúsculas
-* **REVERSE**: inverte a ordem dos caracteres
-* **COUNT**: retorna a quantidade de caracteres da mensagem
+- **UPPER**: converte o texto para letras maiúsculas
+- **LOWER**: converte o texto para letras minúsculas
+- **REVERSE**: inverte a ordem dos caracteres
+- **COUNT**: retorna a quantidade de caracteres
 
 Exemplos:
 
-```id="c1p3pz"
+```
 UPPER hello world
-```
-
-```id="p39o8g"
 REVERSE abcde
-```
-
-```id="g3yyu3"
 COUNT banana
 ```
 
@@ -63,44 +52,56 @@ COUNT banana
 
 ## Execução do Sistema
 
-### Inicialização do servidor
+### Servidor single-thread
 
-O servidor deve ser iniciado antes do cliente:
-
-```id="0z5y1f"
+```bash
 python3 server.py
 ```
 
-Após iniciar, ele ficará aguardando conexões.
+### Servidor multithread
 
----
+```bash
+python3 server_multithread.py
+```
 
-### Execução do cliente
+### Cliente interativo (manual)
 
-Em outro terminal ou máquina:
-
-```id="y3g9dc"
+```bash
 python3 client.py
 ```
 
-O cliente permite entrada interativa de comandos.
+### Cliente single-thread automatizado
+
+```bash
+python3 client_singlethread_auto.py
+```
+
+### Cliente multithread automatizado
+
+```bash
+python3 client_multithread.py
+```
+
+O número de requisições pode ser ajustado pela variável `TOTAL_REQUISICOES` nos arquivos de cliente automatizado.
 
 ---
 
 ## Medição de Desempenho
 
-O sistema inclui medição de tempo em dois níveis:
+O sistema mede tempo em dois níveis:
 
-* **Servidor**: tempo gasto para processar a requisição
-* **Cliente**: tempo total entre envio e recebimento da resposta
+- **Servidor**: tempo de processamento de cada requisição
+- **Cliente**: tempo entre envio e recebimento de cada resposta, e tempo total do experimento
 
 ---
 
-## Tratamento de Entradas
+## Experimento Comparativo
 
-O servidor verifica:
+Os experimentos foram executados em duas instâncias EC2 da AWS separadas, comunicando-se via rede privada, com 500 requisições cada.
 
-* Se o comando informado é válido
-* Se há dados suficientes para execução
+| Experimento | Cliente | Servidor | Tempo Total |
+|---|---|---|---|
+| 1 | Single-thread | Single-thread | 0.161579s |
+| 2 | Single-thread | Multithread | 0.179163s |
+| 3 | Multithread | Multithread | 1.228349s |
 
-Caso contrário, retorna uma mensagem de erro ao cliente.
