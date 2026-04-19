@@ -4,7 +4,7 @@ import random
 import string
 import time
 
-TOTAL_REQUISICOES = 100
+TOTAL_REQUISICOES = 500
 
 
 def random_text(size=10):
