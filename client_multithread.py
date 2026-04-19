@@ -8,13 +8,9 @@ import time
 TOTAL_REQUISICOES = 500
 
 
-# gera string aleatória
-
 def random_text(size=10):
     return ''.join(random.choices(string.ascii_letters, k=size))
 
-
-# gera comando aleatório
 
 def generate_request():
     commands = ["UPPER", "LOWER", "REVERSE", "COUNT"]
@@ -23,7 +19,15 @@ def generate_request():
     return f"{command} {text}"
 
 
-# cada requisição vai em uma nova thread
+def recv_msg(s):
+    data = b""
+    while not data.endswith(b"\n"):
+        chunk = s.recv(1024)
+        if not chunk:
+            break
+        data += chunk
+    return data.decode().strip()
+
 
 def send_request(req_id):
     try:
@@ -31,20 +35,16 @@ def send_request(req_id):
         s.connect((HOST, PORT))
 
         request = generate_request()
-
         start_time = time.time()
 
-        s.send(request.encode())
-        response = s.recv(1024).decode()
+        s.send((request + "\n").encode())
+        response = recv_msg(s)
 
         end_time = time.time()
-        total_time = end_time - start_time
-
         print(
             f"Req {req_id}: {request} -> {response} "
-            f"| tempo cliente: {total_time:.6f}s"
+            f"| tempo cliente: {end_time-start_time:.6f}s"
         )
-
         s.close()
 
     except Exception as e:
@@ -52,7 +52,6 @@ def send_request(req_id):
 
 
 threads = []
-
 experiment_start = time.time()
 
 for i in range(TOTAL_REQUISICOES):
@@ -64,8 +63,4 @@ for t in threads:
     t.join()
 
 experiment_end = time.time()
-
-print(
-    f"\nTempo total do experimento: "
-    f"{experiment_end - experiment_start:.6f}s"
-)
+print(f"\nTempo total do experimento: {experiment_end - experiment_start:.6f}s")
