@@ -14,50 +14,48 @@ def process_request(msg):
 
     if command == "UPPER":
         return data.upper()
-
     elif command == "LOWER":
         return data.lower()
-
     elif command == "REVERSE":
         return data[::-1]
-
     elif command == "COUNT":
         return str(len(data))
-
     else:
         return "Comando inválido"
 
 
-server = socket(AF_INET, SOCK_STREAM)
-server.bind((HOST, PORT))
-server.listen(10)
+def recv_msg(conn):
+    data = b""
+    while not data.endswith(b"\n"):
+        chunk = conn.recv(1024)
+        if not chunk:
+            return None
+        data += chunk
+    return data.decode().strip()
 
-print("Servidor single-thread aguardando conexões")
 
+s = socket(AF_INET, SOCK_STREAM)
+s.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+s.bind((HOST, PORT))
+s.listen(1)
+
+print("Servidor single-thread aguardando conexão...")
+
+(conn, addr) = s.accept()
+print("Conectado por:", addr)
 
 while True:
-    conn, addr = server.accept()
-    print("Conectado por:", addr)
-
-    data = conn.recv(1024)
-
-    if not data:
-        conn.close()
-        continue
+    msg = recv_msg(conn)
+    if msg is None:
+        break
 
     start_time = time.time()
-
-    msg = data.decode()
     print("Recebido:", msg)
-
     response = process_request(msg)
+    processing_time = time.time() - start_time
 
-    end_time = time.time()
-    processing_time = end_time - start_time
-
-    full_response = (
-        f"{response} | tempo servidor: {processing_time:.6f}s"
-    )
-
+    full_response = f"{response} | tempo servidor: {processing_time:.6f}s\n"
     conn.send(full_response.encode())
-    conn.close()
+
+conn.close()
+print("Conexão encerrada.")
